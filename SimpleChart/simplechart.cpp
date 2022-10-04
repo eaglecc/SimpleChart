@@ -52,6 +52,6 @@ void SimpleChart::on_sinButton_clicked()
 	view->setWindowTitle("sin");
 	view->setRenderHint(QPainter::Antialiasing);
 	view->show();// show();
-
+    
 }
 
