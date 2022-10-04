@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/SimpleChart">
+        <file>Resources/grape.ico</file>
+        <file>Resources/lime.ico</file>
+        <file>Resources/Snow Apple.ico</file>
+    </qresource>
+</RCC>
