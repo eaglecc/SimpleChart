@@ -1,13 +1,5 @@
 #include "studentmanager.h"
-#include <QtSql/QSqlDatabase>	// 连接数据库
-#include <QtSql/QSqlError>		// 数据库连接失败打印报错语句
-#include <QtSql/QSqlQuery>		// 数据库操作（增删改查）
-#include <QMessageBox>
-#include <QVariantList>			// 泛型链表，可以存储任何类型的数据
-#include <QDebug>
-#include <QCheckBox>
-#include <QDateTime>
-#include <QMessageBox>
+
 
 
 StudentManager::StudentManager(QWidget *parent)
@@ -15,13 +7,17 @@ StudentManager::StudentManager(QWidget *parent)
 {
 	ui.setupUi(this);
     qDebug() << QSqlDatabase::drivers();
-    QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");  //连接的MYSQL的数据库驱动
-    db.setHostName("localhost");         //主机名
-    db.setPort(3306);                    //端口
-    db.setDatabaseName("student_sign_sys_db");          //数据库名
-    db.setUserName("root");              //用户名
-    db.setPassword("root");            //密码
-    db.open();
+    //QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");  //连接的MYSQL的数据库驱动
+    //db.setHostName("localhost");         //主机名
+    //db.setPort(3306);                    //端口
+    //db.setDatabaseName("student_sign_sys_db");          //数据库名
+    //db.setUserName("root");              //用户名
+    //db.setPassword("root");            //密码
+    //db.open();
+    
+    
+    //使用数据库连接池连接
+    db = ConnectionPool::openConnection();
     //测试连接
     if (!db.open())
     {
@@ -30,13 +26,14 @@ StudentManager::StudentManager(QWidget *parent)
     else
     {
         qDebug() << "连接成功";
+        //加载表格数据
+        LoadToTable("select sno,sname from stu");
+        //加载班级信息
+        ShowAsClass();
+        //按学号显示
+        ShowAsNo();
     }
-    //加载表格数据
-    LoadToTable("select sno,sname from stu");
-    //加载班级信息
-    ShowAsClass();
-    //按学号显示
-    ShowAsNo();
+
 }
 
 StudentManager::~StudentManager()
@@ -45,7 +42,7 @@ StudentManager::~StudentManager()
 
 bool StudentManager::LoadToTable(QString sql)
 {
-    QSqlQuery query;
+    QSqlQuery query(db);
     query.exec(sql);
     if (query.size() == 0)
     {
@@ -59,10 +56,11 @@ bool StudentManager::LoadToTable(QString sql)
     {
         QCheckBox *box = new QCheckBox("未签到");
         //初始化，实现查询数据库，签到已经存在的学生信息
-        QSqlQuery sql;
+        QSqlQuery sql(db);
         sql.exec(QString("select sign_time from stu_sign where sno = %1 and date(sign_time)=current_date")
             .arg(query.value(0).toString()));
         sql.next();
+        //查询的结果不为0，修改为已签到
         if (sql.size())
         {
             box->setText("已签到");
@@ -81,7 +79,7 @@ bool StudentManager::LoadToTable(QString sql)
             //签到时间
             ui.tableWidget->setItem(i, 3, new QTableWidgetItem(QDateTime::currentDateTime().toString()));
             //将记录插入到数据库中
-            QSqlQuery s;
+            QSqlQuery s(db);
             s.exec(QString("insert into stu_sign values(%1,now())").arg(num));
         });
         i++;
@@ -91,7 +89,7 @@ bool StudentManager::LoadToTable(QString sql)
 
 void StudentManager::ShowAsClass()
 {
-    QSqlQuery q;
+    QSqlQuery q(db);
     q.exec("select distinct clazz from stu");
     ui.comboBox->addItem("全部班级");
     while (q.next())
