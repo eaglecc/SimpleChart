@@ -14,7 +14,6 @@
 #include <QDebug>
 #include <QCheckBox>
 #include <QDateTime>
-#include <QMessageBox>
 
 class StudentManager : public QWidget
 {
